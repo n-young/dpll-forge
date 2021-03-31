@@ -20,6 +20,10 @@ one sig False extends Boolean {}
 
 sig Literal {}
 
+one sig Satisfiable {
+    flag: lone Boolean
+}
+
 sig Clause {
 	litset: set Literal->Boolean
 }
@@ -67,6 +71,7 @@ pred unSat {
 
 pred init {
     no guessed
+    no flag
 }
 
 fun getBottomNull: Assignment { 
@@ -80,9 +85,10 @@ fun getTopTrue: Assignment {
 pred backtrack {
     -- Guard
     unSat
-
+    
     -- Transition
     guessed' = (guessed & ((^next.getTopTrue)->Boolean)) + getTopTrue->False
+    flag' = flag
 }
 
 pred guessNext {
@@ -91,6 +97,7 @@ pred guessNext {
 
     -- Transition
     guessed' = guessed + getBottomNull->True
+    flag' = flag
 }
 
 pred moves {
@@ -107,11 +114,16 @@ pred returnSat {
             (lit.l).guessed in l.(c.litset)
         )
     )
+
+    -- Transition
+    guessed' = guessed
+    //flag' = Satisfiable->True
 }
 
 -- We may not need this
 pred fillTrue {
     guessed' = guessed + (Assignment - guessed.Boolean)->True
+    flag' = flag
 }
 
 pred returnUnsat {
@@ -119,11 +131,16 @@ pred returnUnsat {
     unSat
 
     Assignment.guessed = False
+    
+    -- Transition
+    guessed' = guessed
+    //flag' = Satisfiable->False
 }
 
 pred stutter {
     --Invariant
     guessed = guessed'
+    flag' = flag
 }
 
 pred traces {
@@ -141,4 +158,4 @@ pred traces {
 -- Testing --
 -------------
 
-run {traces and eventually returnUnsat}
+run {traces and {eventually returnUnsat} and {eventually after guessNext} and {eventually some flag}} for exactly 3 Assignment
