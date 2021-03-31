@@ -59,7 +59,8 @@ pred unSat {
     some c : Clause | (
         all l : c.litset.Boolean | (
             some (lit.l).guessed and
-            l.(c.litset) != (lit.l).guessed 
+            ((lit.l).guessed not in l.(c.litset))
+            --l.(c.litset) != (lit.l).guessed 
         )
     )
 }
@@ -101,8 +102,9 @@ pred moves {
 pred returnSat {
     all c : Clause | (
         some l : Literal | (
+            l in (guessed.Boolean).lit and
             l in c.litset.Boolean and
-            l.(c.litset) = (lit.l).guessed
+            (lit.l).guessed in l.(c.litset)
         )
     )
 }
