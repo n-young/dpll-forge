@@ -21,7 +21,7 @@ one sig False extends Boolean {}
 sig Literal {}
 
 one sig Satisfiable {
-    flag: lone Boolean
+    var flag: lone Boolean
 }
 
 sig Clause {
@@ -117,7 +117,7 @@ pred returnSat {
 
     -- Transition
     guessed' = guessed
-    //flag' = Satisfiable->True
+    flag' = Satisfiable->True
 }
 
 -- We may not need this
@@ -134,7 +134,7 @@ pred returnUnsat {
     
     -- Transition
     guessed' = guessed
-    //flag' = Satisfiable->False
+    flag' = Satisfiable->False
 }
 
 pred stutter {
@@ -149,7 +149,7 @@ pred traces {
     init
 
     always {
-        (returnSat or returnUnsat) => {stutter} else {moves}
+        (returnSat or returnUnsat) => {after stutter} else {moves}
     }
 }
 
@@ -158,4 +158,4 @@ pred traces {
 -- Testing --
 -------------
 
-run {traces and {eventually returnUnsat} and {eventually after guessNext} and {eventually some flag}} for exactly 3 Assignment
+run {traces and {eventually returnSat or returnUnsat}} for exactly 3 Assignment
