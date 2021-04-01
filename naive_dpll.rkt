@@ -39,19 +39,15 @@ one sig Root extends Assignment {}
 pred wellFormed {
     -- next is Linear
     next.~next in iden
-
     no next.Root
-
     Assignment->Assignment in *(next + ~next) 
 
     -- lit is Bijection between Literals and assignments
     lit.~lit in iden
-
     Literal in Assignment.lit
 
     -- All literals appear at least once
     Literal in Clause.litset.Boolean
-
     Clause in (litset.Boolean).Literal
 }
 
@@ -62,8 +58,7 @@ pred wellFormed {
 pred unSat {
     some c : Clause | (
         all l : c.litset.Boolean | (
-            some (lit.l).guessed and
-            ((lit.l).guessed not in l.(c.litset))
+            some (lit.l).guessed and ((lit.l).guessed not in l.(c.litset))
             --l.(c.litset) != (lit.l).guessed 
         )
     )
@@ -129,7 +124,6 @@ pred fillTrue {
 pred returnUnsat {
     -- Guard
     unSat
-
     Assignment.guessed = False
     
     -- Transition
@@ -145,12 +139,8 @@ pred stutter {
 
 pred traces {
     wellFormed
-
     init
-
-    always {
-        (returnSat or returnUnsat) => {after stutter} else {moves}
-    }
+    always { (returnSat or returnUnsat) => {after stutter} else {moves} }
 }
 
 
