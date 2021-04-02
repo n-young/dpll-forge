@@ -249,6 +249,31 @@ pred traces {
 
 
 -- =======================================================================
+-- PROPERTY CHECKS
+-- =======================================================================
+
+-- TODO: Vacuity check.
+
+-- TODO: Check that if the current case will eventually be unsat, we never reach a sat case.
+
+-- TODO: Will we ever guess the same thing twice? Or, check that once we guess something false, we never guess it true.
+
+-- TODO: Check that if the guessed enum is full, the flag exists
+
+-- TODO: Check that the flag is always raised correctly?
+
+-- TODO: Check that branch is always linear.
+
+-- TODO: Check that assigned is always one per Assignment, and one Boolean per Literal.
+
+-- TODO: Check that if there is some pure literal in both, that we return Unsat
+
+-- TODO: Check that if we have an empty clause, that we return Unsat
+
+-- TODO: Maybe concrete cases?
+
+
+-- =======================================================================
 -- RUN
 -- =======================================================================
 
