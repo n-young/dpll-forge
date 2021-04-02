@@ -1,4 +1,8 @@
 #lang forge
+
+option problem_type temporal
+option max_tracelength 20
+
 -----------------------------
 -- CSCI 1710 Final Project --
 --       Yung Thot         --
@@ -8,21 +12,15 @@
 -----------------------------
 
 
---TODO
---Check that null only comes after T/F assignments
-
-option problem_type temporal
-option max_tracelength 20
+-- =======================================================================
+-- SIGNATURES
+-- =======================================================================
 
 abstract sig Boolean {}
 one sig True extends Boolean {}
 one sig False extends Boolean {}
 
 sig Literal {}
-
-one sig Satisfiable {
-    var flag: lone Boolean
-}
 
 sig Clause {
 	litset: set Literal->Boolean
@@ -33,8 +31,11 @@ sig Assignment {
     var guessed: lone Boolean,
 	next: lone Assignment
 }
-
 one sig Root extends Assignment {}
+
+one sig Satisfiable {
+    var flag: lone Boolean
+}
 
 pred wellFormed {
     -- next is Linear
@@ -51,23 +52,9 @@ pred wellFormed {
     Clause in (litset.Boolean).Literal
 }
 
-----------------
--- Predicates --
-----------------
-
-pred unSat {
-    some c : Clause | (
-        all l : c.litset.Boolean | (
-            some (lit.l).guessed and ((lit.l).guessed not in l.(c.litset))
-            --l.(c.litset) != (lit.l).guessed 
-        )
-    )
-}
-
-pred init {
-    no guessed
-    no flag
-}
+-- =======================================================================
+-- FUNCTIONS
+-- =======================================================================
 
 fun getBottomNull: Assignment { 
     (Assignment - guessed.Boolean) - (Assignment - guessed.Boolean).next
@@ -77,13 +64,18 @@ fun getTopTrue: Assignment {
     guessed.True - ((guessed.True).(^~next))
 }
 
-pred backtrack {
-    -- Guard
-    unSat
-    
-    -- Transition
-    guessed' = (guessed & ((^next.getTopTrue)->Boolean)) + getTopTrue->False
-    flag' = flag
+
+-- =======================================================================
+-- PREDICATES AND TRANSITIONS
+-- =======================================================================
+
+pred unSat {
+    some c : Clause | (
+        all l : c.litset.Boolean | (
+            some (lit.l).guessed and ((lit.l).guessed not in l.(c.litset))
+            --l.(c.litset) != (lit.l).guessed 
+        )
+    )
 }
 
 pred guessNext {
@@ -95,11 +87,14 @@ pred guessNext {
     flag' = flag
 }
 
-pred moves {
-    backtrack or 
-    guessNext
+pred backtrack {
+    -- Guard
+    unSat
+    
+    -- Transition
+    guessed' = (guessed & ((^next.getTopTrue)->Boolean)) + getTopTrue->False
+    flag' = flag
 }
-
 
 pred returnSat {
     all c : Clause | (
@@ -115,12 +110,6 @@ pred returnSat {
     flag' = Satisfiable->True
 }
 
--- We may not need this
-pred fillTrue {
-    guessed' = guessed + (Assignment - guessed.Boolean)->True
-    flag' = flag
-}
-
 pred returnUnsat {
     -- Guard
     unSat
@@ -131,10 +120,19 @@ pred returnUnsat {
     flag' = Satisfiable->False
 }
 
+pred init {
+    no guessed
+    no flag
+}
+
 pred stutter {
     --Invariant
     guessed = guessed'
     flag' = flag
+}
+pred moves {
+    backtrack or 
+    guessNext
 }
 
 pred traces {
@@ -144,8 +142,8 @@ pred traces {
 }
 
 
--------------
--- Testing --
--------------
+-- =======================================================================
+-- RUN
+-- =======================================================================
 
 run {traces and {eventually returnSat or returnUnsat}} for exactly 3 Assignment
