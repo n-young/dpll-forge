@@ -46,7 +46,6 @@ one sig Counter {
 -- FUNCTIONS
 -- =======================================================================
 
-
 fun getTopTrue: Assignment { 
     (assigned.True).Literal - (((assigned.True).Literal).(^~branch))
 }
