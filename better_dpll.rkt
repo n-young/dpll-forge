@@ -278,16 +278,21 @@ pred traces {
 -- =======================================================================
 
 inst SatCase1 {
-    True = T1
-    False = F1
-    Boolean = True + False
-
     Literal = L1 + L2 + L3
     Clause = C1 + C2 + C3
-    litset = C1->L1->T1 + C2->L1->T1 + C2->L2->T1 + C3->L3->F1
+    litset = C1->L1->True0 + C2->L1->True0 + C2->L2->True0 + C3->L3->False0
 }
 test expect {
     sat_case_1: { traces and eventually returnSat } for SatCase1 is sat 
+}
+
+inst UnsatCase1 {
+    Literal = L1 + L2 + L3
+    Clause = C1 + C2 + C3
+    litset = C1->L1->False0 + C2->L1->True0 + C2->L3->True0 + C3->L1->True0
+}
+test expect {
+    unsat_case_1: { traces and eventually returnSat } for UnsatCase1 is unsat 
 }
 
 
@@ -296,11 +301,14 @@ test expect {
 -- =======================================================================
 
 -- Unsat Case
--- run {traces and {eventually returnUnsat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, exactly 7 Int
+-- run {traces and {eventually returnUnsat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, 7 Int
 
 -- Sat Case
--- run {traces and {eventually returnSat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, exactly 7 Int
+-- run {traces and {eventually returnSat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, 7 Int
 
 -- Longer trace lengths
-run {traces and {eventually returnUnsat or returnSat} and {eventually sum[Counter.length] > 4}}
-     for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, exactly 7 Int
+-- run {traces and {eventually returnUnsat or returnSat} and {eventually sum[Counter.length] > 4}}
+--      for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, 7 Int
+
+-- Concrete case
+-- run { traces } for 7 Int for SatCase1 
