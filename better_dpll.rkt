@@ -62,15 +62,18 @@ one sig Root extends Assignment {}
 ----------------
 
 pred unSat {
-    some c : Clause | {
+    (~(Assignment.(assigned + implied)).(Assignment.(assigned + implied)) not in iden) or 
+    (some c : Clause | {
         all l : c.litset.Boolean | {
             some l.(Assignment.assigned + Assignment.implied)
             l.(Assignment.assigned + Assignment.implied) not in l.(c.litset)
         }
-    }
+    })
 }
 
 pred init {
+    Clause in (litset.Boolean).Literal
+    Literal in Clause.litset.Boolean
     length = Counter->sing[0]
     no implied
     no branch
@@ -133,11 +136,98 @@ pred guessNext {
 
 }
 
+fun getSattedClauses: set Clause {
+    (litset.True).((Assignment.(assigned + implied)).True) + (litset.False).((Assignment.(assigned + implied)).False)
+}
+
+fun getNotSattedClauses: set Clause {
+    // will also return 'empty' unsat clauses (but don't worry :))
+    Clause - getSattedClauses
+}
+
+fun getCurrLitset: set Clause->Literal->Boolean {
+    //(litset & getNotSattedClauses->Literal->Boolean) - (((assigned + implied).True -> False) + ((assigned + implied).False -> True))
+    litset & getNotSattedClauses->(Literal - Assignment.(assigned + implied).Boolean)->Boolean
+}
+
+pred canDoSomeUnitElim {
+    some l: Literal - Root.*branch.(assigned + implied).Boolean | {
+        some c: Clause | {
+            (c.getCurrLitset = l->True) or (c.getCurrLitset = l->False)
+        }
+    }
+}
+
+fun getUnitClauses: set Clause {
+    // TODO: SIMPLIFY AND MAKE MORE READABLE?
+    // a clause isn't a unit clause if you can do clause->literal->different literal->same clause
+    // duplicate is symmetric difference (ie. C->3->T and C->3->F is NOT A UNIT CLAUSE)
+    (getNotSattedClauses - getNotSattedClauses.((getCurrLitset.Boolean).(Literal->Literal - iden).~(getCurrLitset.Boolean) & iden)) - 
+    (((getCurrLitset.True).Literal - getNotSattedClauses.((getCurrLitset.True).(Literal->Literal - iden).~(getCurrLitset.True) & iden)) & 
+    ((getCurrLitset.False).Literal - getNotSattedClauses.((getCurrLitset.False).(Literal->Literal - iden).~(getCurrLitset.False) & iden)))
+}
+
+
+pred unitClauseElim {
+    -- Guard
+    canDoSomeUnitElim
+    not unSat
+
+    -- Transition
+    flag' = flag
+    assigned' = assigned
+    branch' = branch
+    implied' = implied + getLastAssigned->(getUnitClauses.getCurrLitset)
+    // length' = length
+}
+
+
+pred canDoSomePureElim {
+    some l: Literal - Root.*branch.(assigned + implied).Boolean | {
+        (l.(getNotSattedClauses.getCurrLitset) = True) or (l.(getNotSattedClauses.getCurrLitset) = False)
+        // #(l.((Clause - getSattedClauses).litset)) = 1
+    }
+}
+
+
+fun getPureLits: set Literal {
+    (Literal - Assignment.(assigned + implied).Boolean) - Literal.(iden & ((getNotSattedClauses.getCurrLitset).(True->False + False->True).~(getNotSattedClauses.getCurrLitset)))
+}
+
+pred pureLitElim {
+    -- Guard
+    canDoSomePureElim
+    not unSat
+    
+    --Transition
+    flag' = flag
+    assigned' = assigned
+    branch' = branch
+    implied' = implied + getLastAssigned->(Clause.getCurrLitset & getPureLits->Boolean)
+}
 
 pred moves {
-    backtrack or 
-    guessNext
+    unSat => backtrack
+    else {
+        canDoSomeUnitElim => unitClauseElim
+        else {
+            canDoSomePureElim => pureLitElim
+            else {
+                guessNext
+            }
+        }
+    }
 }
+
+// pred moves {
+//     unSat => backtrack
+//     else {
+//         canDoSomeUnitElim => unitClauseElim
+//         else {
+//             guessNext
+//         }
+//     }
+// }
 
 
 pred returnSat {
@@ -167,7 +257,7 @@ pred returnSat {
 pred returnUnsat {
     -- Guard
     unSat
-    Literal.(Assignment.assigned) = False
+    Literal.(Assignment.assigned) = False or no Literal.(Assignment.assigned)
     
     -- Transition
     assigned' = assigned
@@ -197,4 +287,4 @@ pred traces {
 -- Testing --
 -------------
 
-run {traces and {eventually returnSat or returnUnsat} and {eventually sum[Counter.length] > 6}} for 10 Assignment, exactly 3 Clause, exactly 7 Int
+run {traces and {eventually returnUnsat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, exactly 7 Int
