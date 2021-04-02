@@ -253,11 +253,11 @@ pred traces {
 -- =======================================================================
 
 -- Unsat Case
-run {traces and {eventually returnUnsat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, exactly 7 Int
+-- run {traces and {eventually returnUnsat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, exactly 7 Int
 
 -- Sat Case
 -- run {traces and {eventually returnSat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, exactly 7 Int
 
 -- Longer trace lengths
--- run {traces and {eventually returnUnsat or returnSat} and {eventually Counter.length > sing[4]}}
---      for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, exactly 7 Int
+run {traces and {eventually returnUnsat or returnSat} and {eventually sum[Counter.length] > 4}}
+     for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, exactly 7 Int

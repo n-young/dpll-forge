@@ -39,10 +39,20 @@ for (const l of Literal.atoms()) {
     if (sign) { assignmentMap[l._id] = sign }
 }
 
+const impliedMap = {}
+for (const l of Literal.atoms()) {
+    const sign = l.join(Assignment.join(implied)).tuples(true).map(x => x.atoms(true)).map(x => x[0]._id)
+        + l.join(Root.join(implied)).tuples(true).map(x => x.atoms(true)).map(x => x[0]._id)
+    if (sign) { impliedMap[l._id] = sign }
+}
+
 // Print assignments.
 const assignments = document.createElement('p')
 for (const k in assignmentMap) {
     assignments.innerHTML += litToString(k, assignmentMap[k]) + ", "
+}
+for (const k in impliedMap) {
+    assignments.innerHTML += "<span style='color: red'>" + litToString(k, assignmentMap[k]) + "</span>" + ", "
 }
 
 // Check if satisfied
