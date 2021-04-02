@@ -1,0 +1,17 @@
+
+//TODO: all of these could be properties
+// pred wellFormed {
+//     // TODO: 'always wellFormed' to enforce always wellformedness
+//     -- next is Linear
+//     branch.~branch in iden
+//     no branch.Root
+//     //Assignment->Assignment in *(next + ~next) 
+
+//     -- lit is Bijection between Literals and assignments
+//     lit.~lit in iden
+//     Literal in Assignment.lit
+
+//     -- All literals appear at least once
+//     Literal in Clause.litset.Boolean
+//     Clause in (litset.Boolean).Literal
+// }
