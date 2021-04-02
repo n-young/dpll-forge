@@ -1,17 +1,12 @@
+TIMELINE
+- April 16 - Milestone 2
+- April 19 - Project Due! (Code + Writeup)
+- April 22-23 - Presentations!
 
-//TODO: all of these could be properties
-// pred wellFormed {
-//     // TODO: 'always wellFormed' to enforce always wellformedness
-//     -- next is Linear
-//     branch.~branch in iden
-//     no branch.Root
-//     //Assignment->Assignment in *(next + ~next) 
-
-//     -- lit is Bijection between Literals and assignments
-//     lit.~lit in iden
-//     Literal in Assignment.lit
-
-//     -- All literals appear at least once
-//     Literal in Clause.litset.Boolean
-//     Clause in (litset.Boolean).Literal
-// }
+TODO
+- DPLL property checks
+- DPLL concrete instances
+- Start CDCL
+- Check if a visualization that is more complex is required? (N: I could make it a tree structure so we can see backtracking...)
+- Write README (one page)
+- Prepare presentation!

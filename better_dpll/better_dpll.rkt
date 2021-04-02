@@ -270,12 +270,16 @@ pred traces {
 
 -- TODO: Check that if we have an empty clause, that we return Unsat
 
--- TODO: Maybe concrete cases?
+-- TODO: Check that lit is Bijection between Literals and assignments?
+
+-- TODO: Check that All literals appear at least once?
 
 
 -- =======================================================================
 -- CONCRETE CASES
 -- =======================================================================
+
+-- TODO: More concrete cases
 
 inst SatCase1 {
     Literal = L1 + L2 + L3
