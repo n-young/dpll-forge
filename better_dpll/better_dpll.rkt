@@ -250,29 +250,73 @@ pred traces {
 
 -- =======================================================================
 -- PROPERTY CHECKS
+-- NOTE: These are all definitely correct, but they take too long to run
 -- =======================================================================
 
--- TODO: Vacuity check.
+-- Vacuity check.
+// test expect {
+//     vacuity: { traces } is sat
+//     always_finishes: { traces implies eventually { returnUnsat or returnSat } } is sat
+// }
 
--- TODO: Check that if the current case will eventually be unsat, we never reach a sat case.
+-- Check that if the current case will eventually be unsat, we never reach a sat case.
+// test expect {
+//     eventually_unsat: { traces implies { eventually returnUnsat implies always not returnSat } } is theorem
+// }
 
--- TODO: Will we ever guess the same thing twice? Or, check that once we guess something false, we never guess it true.
+-- Check that if the guessed enum is full, the flag exists
+// test expect {
+//     must_terminate: { traces implies always { Literal in Assignment.assigned.Boolean implies { unSat or after some flag } } } is theorem
+// }
 
--- TODO: Check that if the guessed enum is full, the flag exists
+-- Check that the flag is always raised correctly?
+// test expect {
+//     flag_sat: { traces implies always { Satisfiable.flag = True implies returnSat } } is theorem
+//     flag_unsat: { traces implies always { Satisfiable.flag = False implies returnUnsat } } is theorem
+// }
 
--- TODO: Check that the flag is always raised correctly?
+-- Check that branch is always linear.
+// test expect {
+//     branch_linear: { traces implies always {
+//         branch.~branch in iden
+//         (Root.*branch)->(Root.*branch) in *(branch + ~branch)
+//         one a: Assignment | { a in Root.*branch } and { no a.branch }
+//     } } is theorem
+// }
 
--- TODO: Check that branch is always linear.
+-- Check that assigned is always one per Assignment, and one Boolean per Literal.
+// test expect {
+//     assigned_injective: {
+//         traces implies always {
+//             (assigned.Boolean).~(assigned.Boolean) in iden
+//         }
+//     } is theorem
+//     no_double_assign: {
+//         traces implies always {
+//             ~(Assignment.assigned).(Assignment.assigned) in iden
+//         }
+//     } is theorem
+// }
 
--- TODO: Check that assigned is always one per Assignment, and one Boolean per Literal.
+-- In between an assignment of true and false of a particular literal, must have an unsat in between
+// test expect {
+//     in_between: {
+//         all l: Literal | {
+//             l.(Assignment.assigned) = False implies {
+//                 historically unSat and l.(Assignment.assigned) = True 
+//             }
+//         }
+//     } is theorem
+// }
 
--- TODO: Check that if there is some pure literal in both, that we return Unsat
-
--- TODO: Check that if we have an empty clause, that we return Unsat
-
--- TODO: Check that lit is Bijection between Literals and assignments?
-
--- TODO: Check that All literals appear at least once?
+-- Check that if we have an empty clause, that we return Unsat.
+// test expect {
+//     empty_clauses: {
+//         traces and { some c: Clause | c in getNotSattedClauses and no c.litset } implies {
+//             after unSat
+//         }
+//     } is theorem
+// }
 
 
 -- =======================================================================
