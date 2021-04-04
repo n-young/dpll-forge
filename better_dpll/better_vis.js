@@ -31,7 +31,7 @@ for (const k in clauseMap) {
     tr.textContent = k + ": " + clauseMap[k].join(", ")
 }
 
-// Extract 
+// Extract assignments
 const assignmentMap = {}
 for (const l of Literal.atoms()) {
     const sign = l.join(Assignment.join(assigned)).tuples(true).map(x => x.atoms(true)).map(x => x[0]._id)
@@ -39,6 +39,7 @@ for (const l of Literal.atoms()) {
     if (sign) { assignmentMap[l._id] = sign }
 }
 
+// Extract implications
 const impliedMap = {}
 for (const l of Literal.atoms()) {
     const sign = l.join(Assignment.join(implied)).tuples(true).map(x => x.atoms(true)).map(x => x[0]._id)
