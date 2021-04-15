@@ -1,8 +1,8 @@
 #lang forge
 
 option problem_type temporal
-option max_tracelength 24
-option min_tracelength 4
+
+
 
 -----------------------------
 -- CSCI 1710 Final Project --
@@ -31,7 +31,7 @@ sig Clause {
 }
 
 abstract sig Assignment {
-    var assigned: set Literal->Boolean
+    var assigned: set Literal->Boolean,
     var implied: set Assignment
 }
 
@@ -45,10 +45,6 @@ sig ImpliedAssignment extends Assignment {}
 
 one sig Satisfiable {
     var flag: lone Boolean
-}
-
-one sig Counter {
-    var length: one Int
 }
 
 
@@ -77,6 +73,33 @@ fun getUnitClauses: set Clause {
     ((getCurrLitset.False).Literal - getNotSattedClauses.((getCurrLitset.False).(Literal->Literal - iden).~(getCurrLitset.False) & iden)))
 }
 
+fun mostRecentGuess: one Assignment {
+    (Root.*next - next.(Root.^(next)))
+}
+
+fun getUIPs[conflict : Clause, guess : GuessedAssignment]: set Assignment {
+    {UIP : Assignment | {
+        ((assigned.Boolean).(conflict.litset.Boolean) & guess.*implied) not in {
+            guess.^(implied - UIP->Assignment - Assignment->UIP)
+        }
+    }}
+}
+
+fun firstUIP[conflict : Clause, guess : GuessedAssignment]: one Assignment {
+    getUIPs[conflict,guess] - ((^implied).(getUIPs[conflict,guess]) & getUIPs[conflict,guess])
+}
+
+fun learnedClause[conflict : Clause, guess : GuessedAssignment]: set Literal->Boolean {
+    (firstUIP[conflict,guess] + ((((assigned.Boolean).(conflict.litset.Boolean)).(
+                    ~^(implied - firstUIP[conflict,guess]->Assignment - Assignment->firstUIP[conflict,guess])
+                )) & GuessedAssignment)).assigned.(True->False + False->True)
+}
+
+fun newDecisionLevel[learned : Literal->Boolean, guess : GuessedAssignment] : one Assignment {
+   ((((assigned.Boolean).(learned.Boolean)) & GuessedAssignment) - guess) -
+   ^next.((((assigned.Boolean).(learned.Boolean)) & GuessedAssignment) - guess)
+}
+
 -- =======================================================================
 -- PREDICATES
 -- =======================================================================
@@ -88,6 +111,7 @@ fun getUnitClauses: set Clause {
 
 pred existsConflictClause {
     (some c : Clause | {
+        some c.litset
         all l : c.litset.Boolean | {
             some l.(Assignment.assigned)
             l.(Assignment.assigned) not in l.(c.litset)
@@ -108,7 +132,7 @@ pred canDoBCP {
     }
 }
 
-pred sat {
+pred returnSat {
     no getNotSattedClauses
 }
 
@@ -121,12 +145,13 @@ pred impliedConflict { //Return Unsat
     // })
     // or //Implied Conflict Clause
     (some c : Clause | {
+        some c.litset
         all l : c.litset.Boolean | {
             some l.(Assignment.assigned)
             l.(Assignment.assigned) not in l.(c.litset)
         }
 
-        no GuessedAssignment & (assigned.((c.litset).Boolean)).(~*implied)
+        no GuessedAssignment & ((assigned.Boolean).((c.litset).Boolean)).(~*implied)
     })
 }
 
@@ -144,9 +169,9 @@ pred bockAndCallPorture {
     next' = next
     litset' = litset
     one c : getUnitClauses {
-        one a : Assignment - (assigned.Boolean).Literal {
+        one a : ImpliedAssignment - (assigned.Boolean).Literal {
             assigned' = assigned + a->(c.getCurrLitset)
-            implied' = implied + ((assigned.Boolean).(c.litset - c.getCurrLitset))->a
+            implied' = implied + ((assigned.Boolean).((c.litset - c.getCurrLitset).Boolean))->a
         }
     }
 
@@ -161,11 +186,11 @@ pred makeGuess {
     implied' = implied
     litset' = litset
     one l : Literal - Assignment.assigned.Boolean | {
-        one a : Assignment - (assigned.Boolean).Literal | {
+        one a : GuessedAssignment - (assigned.Boolean).Literal | {
             assigned' = assigned + a->l->True
 
             {some Root.assigned} => {
-                next' = next + (Root.*next - next.(Root.^(next)))->a
+                next' = next + mostRecentGuess->a
             } else {
                 a = Root
                 next' = next
@@ -176,9 +201,37 @@ pred makeGuess {
 
 pred backtrack {
     -- Guard
+    existsConflict and 
+    not impliedConflict
 
     -- Transition
+    flag' = flag
+    one c : Clause | {
+        some c.litset
+        all l : c.litset.Boolean | {
+            some l.(Assignment.assigned)
+            l.(Assignment.assigned) not in l.(c.litset)
+            // We have selected the conflict clause c
+        }
+        one added : Clause - (litset.Boolean).Literal | {
+            litset' = litset + added->learnedClause[c,mostRecentGuess]
+            next' = next - GuessedAssignment->(newDecisionLevel[learnedClause[c,mostRecentGuess],mostRecentGuess].^next)
+            implied' = implied - Assignment->((newDecisionLevel[learnedClause[c,mostRecentGuess],mostRecentGuess].*next).^implied)
+            assigned' = assigned - ((newDecisionLevel[learnedClause[c,mostRecentGuess],mostRecentGuess].^next).*implied)->Literal->Boolean
+        }
+    }
+}
 
+pred stutter {
+    assigned' = assigned
+    next' = next
+    litset' = litset
+    implied' = implied
+    returnSat implies {
+        flag' = Satisfiable->True
+    } else {
+        flag' = Satisfiable->False
+    }
 }
 
 
@@ -190,32 +243,65 @@ pred init {
     no assigned
     no implied
     no next
-    length = sing[0]
     no flag
+    Literal in Clause.litset.Boolean
 }
 
-pred moves {}
-
-pred increment {}
-
-pred stutter {}
+pred moves {
+    {impliedConflict or returnSat} implies {
+        stutter
+    } else {
+        {existsConflict} implies {
+            backtrack
+        } else {
+            {canDoBCP} implies {
+                bockAndCallPorture
+            } else {
+                makeGuess
+            }
+        }
+    }
+}
 
 pred traces {
     init
+    always moves
 }
 
+option max_tracelength 24
+option min_tracelength 4
 
-
-run {traces and eventually sum[Counter.length] > 5} for exactly 5 Literal, exactly 5 Assignment, 7 Int
+// run {traces and eventually backtrack} for exactly 4 Literal,  10 Assignment, 10 Clause
 
 -- =======================================================================
 -- PROPERTY CHECKS
 -- NOTE: These are all definitely correct, but they take too long to run
 -- =======================================================================
 
+
+
 -- =======================================================================
 -- CONCRETE CASES
 -- =======================================================================
+
+inst BacktrackCase1 {
+    Literal = L1 + L2
+    Clause = C1 + C2 + C3
+    litset = C1->L1->True0 + C1->L2->True0 + C2->L1->True0 + C2->L2->False0
+
+    Assignment = A0 + A1
+    GuessedAssignment = A0
+    ImpliedAssignment = A1
+    assigned = A0->L1->False0 + A1->L2->True0
+
+    no next
+    no flag
+}
+// test expect {
+//     backtrack_case_1: { traces and eventually backtrack } for SatCase1 is sat 
+// }
+
+run { backtrack and after always stutter} for BacktrackCase1
 
 -- =======================================================================
 -- RUN
