@@ -2,6 +2,7 @@
 
 option problem_type temporal
 option max_tracelength 24
+option min_tracelength 4
 
 -----------------------------
 -- CSCI 1710 Final Project --
@@ -35,10 +36,6 @@ one sig Root extends Assignment {}
 
 one sig Satisfiable {
     var flag: lone Boolean
-}
-
-one sig Counter {
-    var length: one Int
 }
 
 
@@ -186,7 +183,6 @@ pred returnSat {
     flag' = Satisfiable->True
     assigned' = assigned
     implied' = implied
-    length' = length
 }
 
 pred returnUnsat {
@@ -199,7 +195,6 @@ pred returnUnsat {
     flag' = Satisfiable->False
     implied' = implied
     branch' = branch
-    length' = length
 }
 
 
@@ -210,7 +205,6 @@ pred returnUnsat {
 pred init {
     Clause in (litset.Boolean).Literal
     Literal in Clause.litset.Boolean
-    length = Counter->sing[0]
     no implied
     no branch
     no assigned
@@ -230,21 +224,16 @@ pred moves {
     }
 }
 
-pred increment {
-    length' = Counter->sing[add[1, sum[Counter.length]]]
-}
-
 pred stutter {
     branch' = branch
     flag' = flag
     assigned' = assigned
     implied' = implied
-    length' = length
 }
 
 pred traces {
     init
-    always {(returnSat or returnUnsat) => {after stutter} else {moves and increment}}
+    always {(returnSat or returnUnsat) => {after stutter} else {moves}}
 }
 
 
@@ -355,8 +344,7 @@ test expect {
 -- run {traces and {eventually returnSat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, 7 Int
 
 -- Longer trace lengths
--- run {traces and {eventually returnUnsat or returnSat} and {eventually sum[Counter.length] > 4}}
---      for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, 7 Int
+run {traces and {eventually returnUnsat or returnSat}} for exactly 3 Literal, exactly 3 Clause, 7 Int
 
 -- Concrete case
 -- run { traces } for 7 Int for SatCase1 

@@ -2,6 +2,7 @@
 
 option problem_type temporal
 option max_tracelength 24
+option min_tracelength 4
 
 -----------------------------
 -- CSCI 1710 Final Project --
@@ -10,6 +11,9 @@ option max_tracelength 24
 --       Matt Thot         --
 --   TA Mentor: TDel Thot  --
 -----------------------------
+
+// Setbuilding: {x, y: Literal | x != y}
+// "Less than" relation, fixes backtracking
 
 
 -- =======================================================================
@@ -28,7 +32,7 @@ sig Clause {
 
 abstract sig Assignment {
     var assigned: set Literal->Boolean
-    var implies: set Assignment
+    var implied: set Assignment
 }
 
 sig GuessedAssignment extends Assignment {
@@ -113,7 +117,7 @@ pred impliedConflict { //Return Unsat
     // (some l : Assignment.assigned.Boolean | {
     //     l->Boolean in Assignment.assigned
 
-    //     no GuessedAssignment & ((assigned.Boolean).l).~*implies
+    //     no GuessedAssignment & ((assigned.Boolean).l).~*implied
     // })
     // or //Implied Conflict Clause
     (some c : Clause | {
@@ -122,7 +126,7 @@ pred impliedConflict { //Return Unsat
             l.(Assignment.assigned) not in l.(c.litset)
         }
 
-        no GuessedAssignment & (assigned.((c.litset).Boolean)).(~*implies)
+        no GuessedAssignment & (assigned.((c.litset).Boolean)).(~*implied)
     })
 }
 
@@ -142,7 +146,7 @@ pred bockAndCallPorture {
     one c : getUnitClauses {
         one a : Assignment - (assigned.Boolean).Literal {
             assigned' = assigned + a->(c.getCurrLitset)
-            implies' = implies + ((assigned.Boolean).(c.litset - c.getCurrLitset))->a
+            implied' = implied + ((assigned.Boolean).(c.litset - c.getCurrLitset))->a
         }
     }
 
@@ -154,7 +158,7 @@ pred makeGuess {
 
     -- Transition
     flag' = flag
-    implies' = implies
+    implied' = implied
     litset' = litset
     one l : Literal - Assignment.assigned.Boolean | {
         one a : Assignment - (assigned.Boolean).Literal | {
@@ -184,7 +188,7 @@ pred backtrack {
 
 pred init {
     no assigned
-    no implies
+    no implied
     no next
     length = sing[0]
     no flag

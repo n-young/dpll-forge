@@ -53,7 +53,7 @@ for (const k in assignmentMap) {
     assignments.innerHTML += litToString(k, assignmentMap[k]) + ", "
 }
 for (const k in impliedMap) {
-    assignments.innerHTML += "<span style='color: red'>" + litToString(k, assignmentMap[k]) + "</span>" + ", "
+    assignments.innerHTML += "<span style='color: red'>" + litToString(k, impliedMap[k]) + "</span>" + ", "
 }
 
 // Check if satisfied
