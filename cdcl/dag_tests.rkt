@@ -16,4 +16,4 @@ pred hasInflection {
     }
 }
 
-run {isDAG and hasInflection} for exactly 7 Atom
+run {isDAG and hasInflection} for exactly 3 Atom
