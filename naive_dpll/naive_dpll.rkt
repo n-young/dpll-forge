@@ -5,10 +5,10 @@ option max_tracelength 20
 
 -----------------------------
 -- CSCI 1710 Final Project --
---       Yung Thot         --
---       Derick Thot       --
---       Matt Thot         --
---   TA Mentor: TDel Thot  --
+--       Nick Young        --
+--       Derick Toth       --
+--       Matt Shinkar      --
+--   TA Mentor: tdelvecc   --
 -----------------------------
 
 

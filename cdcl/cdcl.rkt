@@ -1,19 +1,16 @@
 #lang forge
 
 option problem_type temporal
-
-
+option max_tracelength 24
+option min_tracelength 4
 
 -----------------------------
 -- CSCI 1710 Final Project --
---       Yung Thot         --
---       Derick Thot       --
---       Matt Thot         --
---   TA Mentor: TDel Thot  --
+--       Nick Young        --
+--       Derick Toth       --
+--       Matt Shinkar      --
+--   TA Mentor: tdelvecc   --
 -----------------------------
-
-// Setbuilding: {x, y: Literal | x != y}
-// "Less than" relation, fixes backtracking
 
 
 -- =======================================================================
@@ -159,7 +156,7 @@ pred impliedConflict { //Return Unsat
 -- TRANSITIONS
 -- =======================================================================
 
-pred bockAndCallPorture {
+pred BCP {
     -- Guard
     canDoBCP
     not existsConflict
@@ -255,7 +252,7 @@ pred moves {
             backtrack
         } else {
             {canDoBCP} implies {
-                bockAndCallPorture
+                BCP
             } else {
                 makeGuess
             }
@@ -267,9 +264,6 @@ pred traces {
     init
     always moves
 }
-
-option max_tracelength 24
-option min_tracelength 4
 
 // run {traces and eventually backtrack} for exactly 4 Literal,  10 Assignment, 10 Clause
 

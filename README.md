@@ -5,6 +5,8 @@ DPLL/CDCL modelled in Forge. Created by Matt Shinkar, Derick Toth, and Nick Youn
 - Finish CDCL
 - Better visualizations
 - Fix this README; add CDCL stuff
+- Clean up the code (NSFW stuff, anonymizing?)
+- Collaborators
 - Handin!
 
 ## Overview
