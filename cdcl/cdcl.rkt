@@ -2,14 +2,14 @@
 
 option problem_type temporal
 option max_tracelength 24
-//option min_tracelength 4
+option min_tracelength 4
 
 -----------------------------
 -- CSCI 1710 Final Project --
 --       Nick Young        --
 --       Derick Toth       --
 --       Matt Shinkar      --
---   TA Mentor: tdelvecc   --
+--   TA Mentor: tdelveccc   --
 -----------------------------
 
 
@@ -44,6 +44,9 @@ one sig Satisfiable {
     var flag: lone Boolean
 }
 
+one sig Counter {
+    var len: one Int
+}
 
 -- =======================================================================
 -- FUNCTIONS
@@ -67,7 +70,8 @@ fun getUnitClauses: set Clause {
     -- duplicate is symmetric difference (ie. C->3->T and C->3->F is NOT A UNIT CLAUSE)
     (getNotSattedClauses - getNotSattedClauses.((getCurrLitset.Boolean).(Literal->Literal - iden).~(getCurrLitset.Boolean) & iden)) - 
     (((getCurrLitset.True).Literal - getNotSattedClauses.((getCurrLitset.True).(Literal->Literal - iden).~(getCurrLitset.True) & iden)) & 
-    ((getCurrLitset.False).Literal - getNotSattedClauses.((getCurrLitset.False).(Literal->Literal - iden).~(getCurrLitset.False) & iden)))
+    ((getCurrLitset.False).Literal - getNotSattedClauses.((getCurrLitset.False).(Literal->Literal - iden).~(getCurrLitset.False) & iden))) - 
+    {c : Clause | no c.litset}
 }
 
 fun mostRecentGuess: one Assignment {
@@ -232,6 +236,7 @@ pred stutter {
     } else {
         flag' = Satisfiable->False
     }
+    len' = len
 }
 
 
@@ -244,6 +249,7 @@ pred init {
     no implied
     no next
     no flag
+    len = Counter->sing[0]
     Literal in Clause.litset.Boolean
 }
 
@@ -251,6 +257,7 @@ pred moves {
     {impliedConflict or returnSat} implies {
         stutter
     } else {
+        len' = Counter->sing[add[sum[Counter.len], 1]]
         {existsConflict} implies {
             backtrack
         } else {
@@ -293,7 +300,6 @@ inst BacktrackCase1 {
     assigned = A0->L1->False0 + A1->L2->True0
     implied = A0->A1
 
-
     no next
     flag = Satisfiable0->True0
 }
@@ -301,14 +307,51 @@ inst BacktrackCase1 {
 //     backtrack_case_1: { traces and eventually backtrack } for SatCase1 is sat 
 // }
 
- run {//some c : Clause - (litset.Boolean).Literal {
+//  run {//some c : Clause - (litset.Boolean).Literal {
 //      litset' = litset + c->(Literal - Clause.litset.False)->True}
-//     flag' = flag
-//     after no assigned
-//     after no implied
-       after no next
-    } for BacktrackCase1
+    // flag' = flag
+    // after no assigned or some assigned
+    // after no implied
+    // after no next
+    // } for BacktrackCase1
+
+
+pred PUnsatCase1 {
+    some L1, L3: Literal | {
+        #(L1 + L3) = 2
+        some C1, C2, C3: Clause | {
+            #(C1 + C2 + C3) = 3
+            litset = C1->L1->False + C2->L1->True + C2->L3->True + C3->L1->True
+        }
+    }
+}
+
+pred PUnsatCase2 {
+    some Literal0, Literal1, Literal2: Literal | {
+        #(Literal0 + Literal1 + Literal2) = 3
+        some Clause1, Clause2, Clause3, Clause4: Clause | {
+            #(Clause1 + Clause2 + Clause3 + Clause4) = 4
+            litset = Clause1->Literal1->False + Clause1->Literal2->True + Clause2->Literal1->True + Clause2->Literal2->True + Clause3->Literal0->False + Clause3->Literal2->False + Clause4->Literal0->True + Clause4->Literal2->False
+        }
+    }
+}
+
+pred generatedCase1 {
+    some L1, L3, L2 : Literal | {
+        #(L1 + L3 + L2) = 3
+        some C0, C1 : Clause | {
+            #(C0 + C1) = 2
+            litset = C0->L1->True + C0->L3->False + C1->L2->True + C1->L3->True + C1->L1->False
+        }
+    }
+}
 
 -- =======================================================================
 -- RUN
 -- =======================================================================
+
+run {traces and generatedCase1} for 10 Clause
+
+// run {traces and eventually impliedConflict and eventually sum[Counter.len] > 3} for 5 Clause, exactly 3 Literal, 3 Assignment
+
+// run {traces and eventually returnSat and eventually backtrack and eventually sum[Counter.len] > 3} for 5 Clause, exactly 3 Literal, 3 Assignment
