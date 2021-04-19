@@ -9,7 +9,7 @@ option min_tracelength 4
 --       Nick Young        --
 --       Derick Toth       --
 --       Matt Shinkar      --
---   TA Mentor: tdelveccc   --
+--   TA Mentor: tdelvecc   --
 -----------------------------
 
 
@@ -47,6 +47,7 @@ one sig Satisfiable {
 one sig Counter {
     var len: one Int
 }
+
 
 -- =======================================================================
 -- FUNCTIONS
@@ -88,9 +89,7 @@ fun firstUIP[conflict : Clause, guess : GuessedAssignment]: one Assignment {
 }
 
 fun learnedClause[conflict : Clause, guess : GuessedAssignment]: set Literal->Boolean {
-    (firstUIP[conflict,guess] + ((((assigned.Boolean).(conflict.litset.Boolean)).(
-                    ~^(implied - firstUIP[conflict,guess]->Assignment - Assignment->firstUIP[conflict,guess])
-                )) & GuessedAssignment)).assigned.(True->False + False->True)
+    (firstUIP[conflict,guess] + ((((assigned.Boolean).(conflict.litset.Boolean)).(~^(implied - firstUIP[conflict,guess]->Assignment - Assignment->firstUIP[conflict,guess]))) & GuessedAssignment)).assigned.(True->False + False->True)
 }
 
 fun newDecisionLevel[learned : Literal->Boolean, guess : GuessedAssignment] : one Assignment {
@@ -98,14 +97,10 @@ fun newDecisionLevel[learned : Literal->Boolean, guess : GuessedAssignment] : on
    ^next.((((assigned.Boolean).(learned.Boolean)) & GuessedAssignment) - guess)
 }
 
+
 -- =======================================================================
 -- PREDICATES
 -- =======================================================================
-
-// Commenting out Conflict Literal Stuff because we only assign truth value in BCP
-// pred existsConflictLiteral {
-//     (~(Assignment.assigned).(Assignment.assigned) not in iden) 
-// }
 
 pred existsConflictClause {
     (some c : Clause | {
@@ -118,7 +113,6 @@ pred existsConflictClause {
 }
 
 pred existsConflict {
-    //existsConflictLiteral or 
     existsConflictClause
 }
 
@@ -134,14 +128,7 @@ pred returnSat {
     no getNotSattedClauses
 }
 
-pred impliedConflict { //Return Unsat
-    // //Implied Conflict Lit
-    // (some l : Assignment.assigned.Boolean | {
-    //     l->Boolean in Assignment.assigned
-
-    //     no GuessedAssignment & ((assigned.Boolean).l).~*implied
-    // })
-    // or //Implied Conflict Clause
+pred impliedConflict {
     (some c : Clause | {
         some c.litset
         all l : c.litset.Boolean | {
@@ -152,6 +139,7 @@ pred impliedConflict { //Return Unsat
         no GuessedAssignment & ((assigned.Boolean).((c.litset).Boolean)).(~*implied)
     })
 }
+
 
 -- =======================================================================
 -- TRANSITIONS
@@ -209,7 +197,6 @@ pred backtrack {
         all l : c.litset.Boolean | {
             some l.(Assignment.assigned)
             l.(Assignment.assigned) not in l.(c.litset)
-            // We have selected the conflict clause c
         }
         some added : Clause - (litset.Boolean).Literal | {
             litset' = litset + added->learnedClause[c,mostRecentGuess]
@@ -275,46 +262,10 @@ pred traces {
     always moves
 }
 
-// run {traces and eventually backtrack} for exactly 4 Literal,  10 Assignment, 10 Clause
-
--- =======================================================================
--- PROPERTY CHECKS
--- NOTE: These are all definitely correct, but they take too long to run
--- =======================================================================
-
-
 
 -- =======================================================================
 -- CONCRETE CASES
 -- =======================================================================
-
-inst BacktrackCase1 {
-    Literal = L1 + L2
-    Clause = C1 + C2 + C3
-    litset = C1->L1->True0 + C1->L2->True0 + C2->L1->True0 + C2->L2->False0
-
-    Assignment = A0 + A1
-    GuessedAssignment = A0
-    ImpliedAssignment = A1
-    Root = A0
-    assigned = A0->L1->False0 + A1->L2->True0
-    implied = A0->A1
-
-    no next
-    flag = Satisfiable0->True0
-}
-// test expect {
-//     backtrack_case_1: { traces and eventually backtrack } for SatCase1 is sat 
-// }
-
-//  run {//some c : Clause - (litset.Boolean).Literal {
-//      litset' = litset + c->(Literal - Clause.litset.False)->True}
-    // flag' = flag
-    // after no assigned or some assigned
-    // after no implied
-    // after no next
-    // } for BacktrackCase1
-
 
 pred PUnsatCase1 {
     some L1, L3: Literal | {
@@ -346,12 +297,16 @@ pred generatedCase1 {
     }
 }
 
+
 -- =======================================================================
 -- RUN
 -- =======================================================================
 
+-- Concrete case.
 run {traces and PUnsatCase2} for 10 Clause
 
+-- Unsat case.
 // run {traces and eventually impliedConflict and eventually sum[Counter.len] > 3} for 5 Clause, exactly 3 Literal, 3 Assignment
 
+-- (Interesting) Sat case.
 // run {traces and eventually returnSat and eventually backtrack and eventually sum[Counter.len] > 3} for 5 Clause, exactly 3 Literal, 3 Assignment

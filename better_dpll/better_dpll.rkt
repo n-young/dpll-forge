@@ -312,8 +312,6 @@ pred traces {
 -- CONCRETE CASES
 -- =======================================================================
 
--- TODO: More concrete cases
-
 inst SatCase1 {
     Literal = L1 + L2 + L3
     Clause = C1 + C2 + C3
@@ -338,13 +336,13 @@ test expect {
 -- =======================================================================
 
 -- Unsat Case
--- run {traces and {eventually returnUnsat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, 7 Int
+// run {traces and {eventually returnUnsat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, 7 Int
 
 -- Sat Case
--- run {traces and {eventually returnSat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, 7 Int
+// run {traces and {eventually returnSat}} for exactly 6 Assignment, exactly 3 Literal, exactly 3 Clause, 7 Int
 
 -- Longer trace lengths
 run {traces and {eventually returnUnsat or returnSat}} for exactly 3 Literal, exactly 3 Clause, 7 Int
 
 -- Concrete case
--- run { traces } for 7 Int for SatCase1 
+// run { traces } for 7 Int for SatCase1 
