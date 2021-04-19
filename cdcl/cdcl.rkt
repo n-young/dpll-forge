@@ -350,7 +350,7 @@ pred generatedCase1 {
 -- RUN
 -- =======================================================================
 
-run {traces and generatedCase1} for 10 Clause
+run {traces and PUnsatCase2} for 10 Clause
 
 // run {traces and eventually impliedConflict and eventually sum[Counter.len] > 3} for 5 Clause, exactly 3 Literal, 3 Assignment
 
