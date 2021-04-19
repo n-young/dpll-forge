@@ -2,7 +2,7 @@
 
 option problem_type temporal
 option max_tracelength 24
-option min_tracelength 4
+//option min_tracelength 4
 
 -----------------------------
 -- CSCI 1710 Final Project --
@@ -76,10 +76,7 @@ fun mostRecentGuess: one Assignment {
 
 fun getUIPs[conflict : Clause, guess : GuessedAssignment]: set Assignment {
     {UIP : Assignment | {
-        ((assigned.Boolean).(conflict.litset.Boolean) & guess.*implied) not in {
-            guess.^(implied - UIP->Assignment - Assignment->UIP)
-        }
-    }}
+        guess->guess not in ^((implied + (assigned.Boolean).(conflict.litset.Boolean)->guess) - UIP->Assignment - Assignment->UIP )}}
 }
 
 fun firstUIP[conflict : Clause, guess : GuessedAssignment]: one Assignment {
@@ -203,18 +200,24 @@ pred backtrack {
 
     -- Transition
     flag' = flag
-    one c : Clause | {
+    some c : Clause | {
         some c.litset
         all l : c.litset.Boolean | {
             some l.(Assignment.assigned)
             l.(Assignment.assigned) not in l.(c.litset)
             // We have selected the conflict clause c
         }
-        one added : Clause - (litset.Boolean).Literal | {
+        some added : Clause - (litset.Boolean).Literal | {
             litset' = litset + added->learnedClause[c,mostRecentGuess]
-            next' = next - GuessedAssignment->(newDecisionLevel[learnedClause[c,mostRecentGuess],mostRecentGuess].^next)
-            implied' = implied - Assignment->((newDecisionLevel[learnedClause[c,mostRecentGuess],mostRecentGuess].*next).^implied)
-            assigned' = assigned - ((newDecisionLevel[learnedClause[c,mostRecentGuess],mostRecentGuess].^next).*implied)->Literal->Boolean
+            newDecisionLevel[learnedClause[c,mostRecentGuess],mostRecentGuess] = none implies { //We are learning a unit clause
+                next' = next - GuessedAssignment->mostRecentGuess
+                implied' = implied - Assignment->(mostRecentGuess.^implied)
+                assigned' = assigned - (mostRecentGuess.*implied)->Literal->Boolean
+            } else {
+                next' = next - GuessedAssignment->(newDecisionLevel[learnedClause[c,mostRecentGuess],mostRecentGuess].^next)
+                implied' = implied - Assignment->((newDecisionLevel[learnedClause[c,mostRecentGuess],mostRecentGuess].*next).^implied)
+                assigned' = assigned - ((newDecisionLevel[learnedClause[c,mostRecentGuess],mostRecentGuess].^next).*implied)->Literal->Boolean
+            }
         }
     }
 }
@@ -286,16 +289,25 @@ inst BacktrackCase1 {
     Assignment = A0 + A1
     GuessedAssignment = A0
     ImpliedAssignment = A1
+    Root = A0
     assigned = A0->L1->False0 + A1->L2->True0
+    implied = A0->A1
+
 
     no next
-    no flag
+    flag = Satisfiable0->True0
 }
 // test expect {
 //     backtrack_case_1: { traces and eventually backtrack } for SatCase1 is sat 
 // }
 
-run { backtrack and after always stutter} for BacktrackCase1
+ run {//some c : Clause - (litset.Boolean).Literal {
+//      litset' = litset + c->(Literal - Clause.litset.False)->True}
+//     flag' = flag
+//     after no assigned
+//     after no implied
+       after no next
+    } for BacktrackCase1
 
 -- =======================================================================
 -- RUN
